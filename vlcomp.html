@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link rel="stylesheet" href="css/normalize.css">
+        <link rel="stylesheet" href="css/main.css">
+		<link rel="stylesheet" href="css/pdf.css">
+        <script src="js/vendor/modernizr-2.6.2.min.js"></script>
+    </head>
+    <body>
+	
+	
+<h1>Build your own Virtual Lab</h1>
+<p><a href="http://mattvelic.com/about/">Matt Velic's</a> companion eBook to the presentation <em><a href="http://mattvelic.com/virtual-lab/">Build your own Virtual Lab</a>.</em> Note: this eBook is a work in progress. Should a diagram disagree with the text, follow what is described in the text. Enjoy!</p>
+<h2 id="why-build-a-virtual-lab">Why Build a Virtual Lab?</h2>
+<p>We all come to the DBA trade from different backgrounds. Some have worked in IT in a different specialty - programmers, network admins, and help desk. But others have a different background altogether: admin assistants, data entry, and other kinds of business users. For those of us from non-IT backgrounds, there are experiences that we may miss. Personally, while I was somewhat adept at building websites, I felt pretty lost when it came to networks and servers.</p>
+<p>Of course we can pick up bits here and there, but there are more complete ways to learn these skills. Thanks to the powerful state of computing, we can set up virtual environments. Naturally, setting up a networked environment (AKA: lab) will allow for further experimentation with SQL Server as well, such as clustering, mirroring, and replication projects.</p>
+<h3 id="our-requirements">Our Requirements</h3>
+<div class="figure right">
+<img src="img/photo.jpg" alt="Look ma, cable management!" class="small" /><p class="caption">Look ma, cable management!</p>
+</div>
+<p>While building a lab can be time arduous, it isn't overly complicated nor does it have to be expensive. Here's the basic requirements:</p>
+<ul class="incremental">
+<li>A computer</li>
+<li><a href="https://www.virtualbox.org/wiki/Downloads">Oracle's VirtualBox</a></li>
+<li><a href="http://technet.microsoft.com/en-US/evalcenter/hh670538.aspx?ocid=&amp;wt.mc_id=TEC_108_1_33">Windows Server 2012 Evaluation Edition</a></li>
+</ul>
+<p>Assuming you have access to a computer at home or work, VirtualBox and Windows Server are both free. This is important for those without MVP or other access to MSDN for software needs.</p>
+<p>If you can afford to spend on your computer, you can build a nicer lab. Since we'll be relying on virtualization, you'll want a beefy host (the computer running VirtualBox) so you can run more virtual machines (guests) concurrently. This is how we'll create a networked environment utilizing multiple guests.</p> 
+<h3 id="hardware-considerations-for-your-lab">Hardware Considerations for your Lab</h3>
+<p>Here are the specs on my desktop computer. While it may seem impressive, your host doesn't require as much hardware.</p>
+<ul class="incremental">
+<li>(64-bit) Windows 7 Pro</li>
+<li>Intel i5 four-core CPU</li>
+<li>32GB of memory</li>
+<li>Crucial SSD for C: drive</li>
+<li>1TB HHD for storage</li>
+</ul>
+<p>There are two points to consider for your operating system. First, you need to run a 64-bit version so you can access more than 3.5GB of memory. Second, <a href="http://msdn.microsoft.com/en-us/library/windows/desktop/aa366778v=vs.85.aspx#physical_memory_limits_windows_7">even the 64-bit version of Windows you choose has an effect on how much memory you can access</a>. For example, Windows 7 Home Premium will limit you to 16GB, which should be fine for our purposes, but if you can afford Professional Edition (or greater), you won't have to worry about RAM limitations.</p>
+<p>As for the processor, you'll want a minimum of four cores. If you can afford a processor with hyper-threading, which will double the number of cores presented to your system, that's even better.</p>
+<p>The amount of memory is important, and thankfully memory continues to remain inexpensive. I've read examples where people have created sparse environments using only 8GB of memory (and I've done the lab with only 6GB!), but 12GB to 16GB minimally will give some breathing room to run multiple machines.</p>
+<p>As for storage, I am running a combo of an SSD for Windows while everything else is dumped on a large HHD. You don't need to get this complicated: a single hard drive will do fine just as long that it has the space necessary to create all the virtual hard disks. Otherwise, it may become a storage balancing act.</p>
+<h2 id="installing-windows-server-2012-on-a-base-vm">Installing Windows Server 2012 on a Base VM</h2>
+<p>Installing VirtualBox is simple, so we won't review that here. But once it is installed, you'll be ready to create your first virtual machine (VM) and install Windows Server 2012 onto it.</p>
+<h3 id="its-vm-not-vim">It's VM; not Vim</h3>
+<div class="figure right">
+<img src="img/new-vm_step1.png" alt="Creating and naming a new VM." class="medium" /><p class="caption">Creating and naming a new VM.</p>
+</div>
+<p>Creating a new virtual machine in VirtualBox couldn't be easier. Begin by clicking on the New button in the upper-left hand corner of the program. This will open a dialog box. Choose the version of Windows you are installing (I chose &quot;Windows 2012 (64 bit)&quot;), and give your new machine a name. Mine is &quot;WS12-Model.&quot; This reminds me that I'm installing Windows Server 2012 (WS12), and I'm creating this first machine to act as a Model for the clones I'll be making. You can follow whatever naming scheme that makes sense to you.</p>
+<p>After clicking Next, you'll have to determine how much memory to allocate. I chose 4096MB, which is 4GB. And don't fret too much over this decision; it's easy to change after the fact.</p>
+<!--
+<div class="figure right">
+<img src="img/new-vm_step2.png" alt="Creating a new virtual hard drive." class="small" /><p class="caption">Creating a new virtual hard drive.</p>
+</div>
+-->
+<div class="figure right">
+<img src="img/new-vm_step3.png" alt="Naming and sizing the virtual hard drive." class="medium" /><p class="caption">Naming and sizing the virtual hard drive.</p>
+</div>
+<p>Next, VirtualBox will ask if you want to create a virtual hard drive, which we will. When you click on next, it will ask what kind of file to create; choose the VDI option. Next, it will ask if you want to dynamically allocate or use a fixed drive size - basically, it's asking if you want to size the file now or grow it later. While using fixed drive is typically better for performance, choose dynamic instead as it will help you save significant storage space. This is a test system, and we're likely to make mistakes while learning, so we're not going to be worried about drive performance at this point.</p>
+<p>Finally, it will ask you to name and size the drive. I leave the name the same as my machines for simplicity's sake, but I do tend to increase the drive size from the suggested minimum. For example, all my machines have 40GB drives. Clicking Create, the machine is finished and will be added to the list of VMs on the left side of the program.</p>
+<p>I would suggest changing a few more settings at this point by right-clicking on the machine and choosing &quot;Settings...&quot; On the system tab, you'll want to turn off the Floppy option, turn on the Network option, and re-order the boot sequence. It is important that CD-ROM is first in the list, since that's how we'll install Windows Server. It's in the System tab that you can adjust the memory and number of processors as well. For now, you can leave your settings at 4GB and 1 processor.</p>
+<!--
+<div class="figure">
+<img src="img/system_tab.png" alt="Options on the System tab." /><p class="caption">Options on the System tab.</p>
+</div>
+-->
+<div class="figure right">
+<img src="img/IntNet.png" alt="Change VirtualBox&#39;s network setting." class="medium" /><p class="caption">Change VirtualBox's network setting.</p>
+</div>
+<p>In the Storage tab, you'll see the virtual hard drive that was created earlier. If you'd like to simulate a more complicated storage setup, you could create and add more virtual drives now. Again since we're practicing networking, we're not going to worry about adding additional drives at this time.</p>
+<p>Most importantly, click on the Network tab. Make sure that Adaptor 1 is enabled (it should be by default), and change it from NAT to Internal Network. If you'd like to know more, <a href="http://www.virtualbox.org/manual/ch06.html">VirtualBox has some good documentation about the different Network settings.</a> Simply, we're telling VirtualBox that this server is plugged into a switch on the <em>intnet</em> network. While this will be the default network for our domain, we'll also set up a second internal network for our iSCSI storage.</p>
+<p>Click the OK button when you are finished, because we're ready to install Windows.</p>
+<h3 id="installing-windows-server-2012">Installing Windows Server 2012</h3>
+<p>Click on the green Start arrow in VirtualBox to launch the new VM. A new window will open with the machine booting up inside of it. You'll be prompted to add your installation media by a dialog box.</p>
+<!--
+<div class="figure">
+<img src="img/select-startup-disk.png" alt="Selecting your installation media." /><p class="caption">Selecting your installation media.</p>
+</div>
+-->
+<p>Clicking on the folder with a green Up arrow, you'll be taken to your file system to find and choose the Windows Server 2012 iso that you downloaded from Microsoft.</p>
+<div class="figure">
+<img src="img/choose_iso.png" alt="Finding and opening your Windows Server 2012 ISO file." class="large" /><p class="caption">Finding and opening your Windows Server 2012 ISO file.</p>
+</div>
+<p>At this point, installing Windows is simple. Choose the appropriate language and keyboard settings, click Next, and then Install.</p>
+<!--
+<div class="figure right">
+<img src="img/dc_gui.png" alt="Choose Datacenter with the GUI option." class="medium" /><p class="caption">Choose Datacenter with the GUI option.</p>
+</div>
+-->
+<p>As mentioned, we're installing the Datacenter version of the software. You could just as easily install the Standard edition; it won't matter for the purposes of our lab. Be sure to install it with the GUI components instead of Core alone. If you want practice administering servers via command line, you'll want to choose the Core option instead, but that's another lesson for another day.</p>
+<p>Ignore the license and blindly accept the terms. Choose the option, &quot;Custom: Install Windows only (advanced)&quot; to install a fresh copy of Windows.</p>
+<!--
+<div class="figure right">
+<img src="img/advanced_install.png" alt="Choose the Advanced installation option." class="small" /><p class="caption">Choose the Advanced installation option.</p>
+</div>
+-->
+<p>You should see a hard drive with the same size as allocated previously. Click the Next button and begin the wait. Your VM will restart as necessary at the end of the process.</p>
+<!--
+<div class="figure">
+<img src="img/admin_screen.png" alt="Setting up your admin account." /><p class="caption">Setting up your admin account.</p>
+</div>
+-->
+<p>Finally, you'll come to an Admin setup screen. Enter a memorable password (twice) and finish up.</p>
+<h3 id="navigating-your-new-install">Navigating your New Install</h3>
+<p>VirtualBox is quite nifty when it comes to sharing the keyboard and mouse between the VMs and the host machine. Typically, whatever has focus has control. That means that if you roll your mouse onto the VM window, it should take over control. If you click inside of it, you'll be able to type.</p>
+<p>The tricky part is <em>Ctrl+Atl+Del</em>. In order to perform this action within a VM, you need to use the <strong><em>Right Ctrl</em> + Del</strong> only. This is important since you won't be able to log in otherwise!</p>
+<div class="figure">
+<img src="img/server-manager.png" alt="The server manager interface." class="large" /><p class="caption">The server manager interface.</p>
+</div>
+<p>Once logged in, take a quick look around, but do not change any of the settings of the machine. We're about to reset everything so we can use it as a model for all the other VMs we'll be creating later in the process.</p>
+<br />
+<br />
+<br />
+<br />
+<br />
+<h3 id="sysprep-the-windows-sid">Sysprep the Windows SID</h3>
+<p>What's the Windows SID? It's a <a href="http://en.wikipedia.org/wiki/Security_Identifier">security ID assigned by Windows</a>. Within a network, SIDs should be unique to each machine. However, during the VirtualBox cloning process, they can be duplicated. But if we sysprep our new install immediately, we can save the machine in a state where every clone will start up and generate a new, unique SID.</p>
+<div class="figure right">
+<img src="img/sysprep.png" alt="Run sysprep.exe to generate a new SID." class="small" /><p class="caption">Run sysprep.exe to generate<br />a new SID.</p>
+</div>
+<p>In your VM, open up the PowerShell prompt (you should find a shortcut on the Taskbar at the bottom), and type in the following to open the System Preparation Tool.</p>
+<blockquote class="code">
+<p><code>C:\Windows\System32\Sysprep\sysprep.exe</code></p>
+</blockquote>
+<p>Leave it in Out-of-Box mode, click the Generalize button, and choose the Shutdown option.</p>
+<blockquote class="warning">
+<p><strong>This is not recommended for production systems.</strong><br />We can get away with it <em>because it is our own lab</em>.</p>
+</blockquote>
+<p>Once you click the okay button, the system will work on resetting itself, and shut down once complete. From now on, every VM that you clone from this base install, you'll need to do some system setup, but you shouldn't run into the duplicate SID issue.</p>
+<h2 id="clone-of-my-own-vm">Clone of my Own (VM)</h2>
+<div class="figure right">
+<img src="img/Clone_VM_S1.png" alt="Right-click your base VM and choose Clone..." class="small" /><p class="caption">Right-click your base VM<br />and choose Clone...</p>
+</div>
+<p>Even though it wasn't difficult to install Windows, it would be nice to avoid having to sit through a bunch of installs. And you can thank VirtualBox's cloning functionality that you won't have to.</p>
+<h3 id="cloning-vms">Cloning VMs</h3>
+<p>Cloning a VM is dead simple. Simply right-click on the Model that we created moments ago, and choose &quot;Clone...&quot;</p>
+<p>VirtualBox will ask for a new name. Following convention, name it &quot;WS12-Controller,&quot; since we'll be creating a domain controller next. You should also check the box to Reinitialize the MAC addresses.</p>
+<!--
+<div class="figure">
+<img src="img/Clone_VM_S2.png" alt="Give your clone a new name." /><p class="caption">Give your clone a new name.</p>
+</div>
+-->
+<p>On the next screen, choose Full Clone since we want these to be completely separate machines. VirtualBox processes for a few minutes, and will present your newly cloned machine in the list. As mentioned, when you start it up, you'll have to do some minor setup work.</p>
+<br />
+<br />
+<br />
+<br />
+<h2 id="building-a-windows-cluster">Building a Windows Cluster</h2>
+<div class="figure right">
+<img src="img/cluster_diagram.png" alt="Windows Cluster connected to a domain controller and shared storage" class="medium" /><p class="caption">Cluster connected to a domain controller and shared storage</p>
+</div>
+<p>At this point, we're going to change tacts and focus on building an example networked environment in VirtualBox. We will focus on creating a Windows Server 2012 failover cluster.</p>
+<p>Clustering two or more computers together provides higher availability to a resource through redundancy. Each of the clustered computers is called a Node. Although the nodes within a cluster are distinct machines, they are presented to other computers and users as a single resource through an access point recorded in the DNS Server. We can see the basic components of a cluster in the diagram.</p>
+<p>Building a cluster is a bit like following a recipe. In order to cook up a cluster, we need the following ingredients:</p>
+<ul class="incremental">
+<li>Domain Controller</li>
+<li>Shared Storage</li>
+<li>Two (or more!) Windows Servers (Nodes) with Failover Clustering installed</li>
+</ul>
+<p>And inside of VirtualBox, we'll also complete some fancy settings with the Network Adapters.</p>
+<h2 id="setting-up-your-domain-controller">Setting up your Domain Controller</h2>
+<!--
+<div class="figure right">
+<img src="img/computer_name_change.png" alt="Changing the name of your Domain Controller." class="medium" /><p class="caption">Changing the name of your Domain Controller.</p>
+</div>
+-->
+<p>The domain controller will act as the base for our network, and allow us to join multiple servers to one domain. In the above diagram, the domain controller is the blue server at the top. We'll be up and running in two steps: installing the appropriate roles to our server, and configuring our controller.</p>
+<h3 id="before-the-first-restart">Before the First Restart</h3>
+<div class="figure right">
+<img src="img/OpenEthernetSettings.png" alt="Open up the Ethernet properties." class="medium" /><p class="caption">Open up the Ethernet properties.</p>
+</div>
+<p>If you haven't already, clone a new VM and name it &quot;DomainController.&quot; In its Network Settings, make sure that it only has one adapter, and that it is set to the <em>intnet</em> Internal Network.</p>
+<p>Once you've started your VM, click on the first heading, &quot;Configure this local server.&quot; On the new screen, click on the Computer Name to bring up a dialog box to change it. Click on the Change... button and change the computer's name to DomCon. Once you click OK to apply the change, you'll be prompted to restart now or later. Choose later, since there is more work we can do before we <em>absolutely</em> need to perform a restart.</p>
+<div class="figure right">
+<img src="img/IPSettings.png" alt="My DomCon&#39;s IP settings." class="medium" /><p class="caption">My DomCon's IP settings.</p>
+</div>
+<p>After changing the name, click on &quot;IPv4 address assigned...&quot; on the Ethernet setting a few lines down. Right-click on the Ethernet network and choose Properties. In the Ethernet Properties pop-up box, double-click the &quot;Internet Protocol Version 4 (TCP/IPv4)&quot; connection to open it's properties.</p>
+<p>Inside of the properties, we'll be setting up a static IP address for our domain controller. You can follow the example I've provided in the screenshot (I chose 10.0.0.1), or you can <a href="http://en.wikipedia.org/wiki/Private_network#Private_IPv4_address_spaces">check out the different options available</a> as described by Wikipedia. In a nutshell, the IP address should be specific to each machine, and we'll want to route the machine back to itself for DNS purposes by using 127.0.0.1. We can leave the default subnet mask as is. As for the default gateway, we can leave it blank since we've told VirtualBox to think of itself as directly plugged into a network switch.</p>
+<p>Click OK and exit out of the network settings. Return to the Dashboard (upper-left) and click on &quot;Add roles and features.&quot; Click through the first page. Choose Role-based or feature-based installation on the Installation Type page, and choose the DomCom server as the target in the Server Selection page. (It should be the only one listed even though the name change hasn't taken effect yet.) On the Server Roles page, click the boxes for Active Directory Domain Services (ADDS) and DNS Server. Be sure to add all the features as requested by the wizard, and don't worry about any warnings that pop-up: you can click through them at this point.</p>
+<div class="figure">
+<img src="img/addroles.png" alt="Adding the ADDS and DNS roles to the server." class="large" /><p class="caption">Adding the ADDS and DNS roles to the server.</p>
+</div>
+<p>As for additional Features on the next page, you won't need to add anything extra. Click thru to the Confirmation page, click the &quot;Restart the destination server...&quot; box at the top, and finally click the Install button. Once the installation has completed, your server should restart automatically. If not (and it didn't in my case...), simply open up PowerShell and run the &quot;Restart-Computer&quot; command.</p>
+<h3 id="after-the-restart">After the Restart</h3>
+<p>Log back into your machine. If you click on &quot;Configure this local server,&quot; you'll notice that your changes have been applied. The final bit of work to do is to set up a new domain for your network. In the upper-right hand corner, you'll see a flag with a yellow warning triangle. Click on it, and you should see a post-deployment configuration task waiting for you. Click on &quot;Promote this server to a domain controller.&quot;</p>
+<div class="figure right">
+<img src="img/postconfig.png" alt="Promote the server to DomCon." class="small" /><p class="caption">Promote the server to DomCon.</p>
+</div>
+<p>In the Deployment Configuration, select &quot;Add a new forest&quot; and supply a name for your domain. I've chosen sqllab.local.</p>
+<!--
+<div class="figure">
+<img src="img/deployconfigstep1.png" alt="Add a new forest." class="large" /><p class="caption">Add a new forest.</p>
+</div>
+-->
+<p>On the next page, add a password for the Directory Services Restore Mode. The remainder of the options can (more or less) be clicked thru till install. Again, the server should automatically reboot after the operation completes. We've set up our domain controller!</p>
+<br />
+<h2 id="adding-our-nodes">Adding our Nodes</h2>
+<div class="figure right">
+<img src="img/cluster_diagram.png" alt="Windows Cluster connected to a domain controller and shared storage" class="small" /><p class="caption">Cluster Diagram</p>
+</div>
+<p>Now that we've set up our domain controller, we can test the new domain by creating our two Nodes and joining them to the domain. This will also give us a chance to do a little configuration with our nodes before we add our iSCSI shared storage. As a reminder, our nodes are represented by the green servers in our diagram.</p>
+<h3 id="testing-the-domain">Testing the Domain</h3>
+<p>Take the opportunity to clone two new machines from your Model. I've named mine &quot;WS12-Node1&quot; and &quot;WS12-Node2&quot; respectively. After they are finished cloning, go into the Settings to make sure that both of them are attached to the <em>intnet</em> Internal Network, since that's the network where we are running our domain.</p>
+<p>Start up the machines, and complete the set up process. I do recommend doing them both at the same time, side-by-side, since you'll be making the same changes in both machines. After you've logged in to the machines, click on &quot;Configure this local server&quot; to change the servers' names; again I chose Node1 and Node2 respectively. Because of the name change, you will want to restart before joining to the domain.</p>
+<p>After the restart, log in and again choose &quot;Configure this local server&quot; but this time click on the Ethernet option. As before, we're going to give each node a static IP address, but we're also going to make our lives a bit easier later in the process. When the Ethernet box pops up, right-click and choose &quot;Rename.&quot; I've renamed mine to &quot;intnet Ethernet&quot; since that's the network our adapter is connected to at the moment. When we add a second adapter later in the process, this will help us distinguish which ethernet adapter belongs to which network. And as always, do this renaming task on each machine.</p>
+<p>After renaming your ethernet adapters, right-click and choose Properties. In the Ethernet Properties, double-click the &quot;Internet Protocol Version 4 (TCP/IPv4),&quot; just like we did with the domain controller. Again, we'll be providing a static IP address for each node, and as you can see in the diagram, I chose 10.0.0.11 and 10.0.0.12 for my nodes. Use the default Subnet mask, and you can leave the Default gateway blank. As for the Preferred DNS Server, use 10.0.0.1 for both machines. You'll remember that's the IP address of our domain controller, which has DNS Services installed on it. Now when either of these machines need to resolve an address, they'll know to use the domain controller we set up.</p>
+<p>At this point, we can join our domain! Back in the local server settings, click on the Workgroup setting, which will bring up that familiar name change box. This time, however, change the &quot;Member of&quot; setting from Workgroup to Domain, and type in <em>sqllab.local</em>, which is what we used when we set up our domain earlier. After clicking Okay, you'll be prompted to supply the domain's administrative password, which will be the same as the admin login to your domain controller.</p>
+<div class="figure">
+<img src="img/joiningdomain.png" alt="Joining a node to a domain" class="large" /><p class="caption">Joining your node to the domain</p>
+</div>
+<p>Once both machines have been joined to the domain, you can shut them down since we're going to need to make changes to their settings in VirtualBox before we can add our iSCSI storage.</p>
+<h2 id="setting-up-shared-storage">Setting up Shared Storage</h2>
+<p>Before we create a VM for our iSCSI storage, we're going to make an addition to our Nodes. In VirtualBox, right-click and enter the Settings for each node. In the Network tab, click on Adapter 2 and enable it. Finally, change the Name to <em>storage</em>. Now each of our nodes is connected to two networks - our public <em>intnet</em> network and our private <em>storage</em> network.</p>
+<div class="figure right">
+<img src="img/cluster_diagram.png" alt="Windows Cluster connected to a domain controller and shared storage" class="small" /><p class="caption">Cluster Diagram</p>
+</div>
+<p>Once you've added this second adapter to both machines, start them up and log in. Choose &quot;Configure this local server&quot; and you'll see that a second Ethernet adapter has been added to the list, but we can tell the different between it and the one connected to <em>intnet</em> because we renamed that adapter earlier.</p>
+<p>Within each machine, set up a static IP address on the adapter that is connected to the <em>storage</em> network (and I'd recommend renaming it too). However, instead of using the 10.0.0.__ scheme, use 192.168.0.11 and 192.168.0.12 instead. This represents the fact that our domain network traffic and our storage network traffic will be occurring on two different channels, as it were. In the cluster diagram, you can see that we're representing this other network (and its related IP addresses) in dark purple.</p>
+<p>As for the Network mask, use the default. And for the Default gateway and the Preferred DNS Server, you can leave those blank for the purposes of this exercise.</p>
+<p>We're done with our nodes for the time being: we're going to move on to setting up a new VM to serve our iSCSI shared storage, which is represented by the dark purple machine at the bottom of our diagram.</p>
+<h3 id="creating-our-iscsi-storage">Creating our iSCSI Storage</h3>
+<p>As before, begin by cloning a new VM. I named mine &quot;WS12-iSCSI.&quot; Before turning it on, enter into the Settings in VirtualBox. In the Network tab, change the adapter from <em>intnet</em> to <em>storage</em>. This machine will be running traffic on its own network, and doesn't need access to the domain's network. Start the machine and set it up. You can change the name and set a static IP address. I used &quot;iSCSI&quot; and &quot;192.168.0.20&quot; for each of those settings. You can use the defaults (or blanks) for Network mask, Default gateway, and Preferred DNS Server. Complete this basic set up work with a restart before we work on our iSCSI disk.</p>
+<div class="figure">
+<img src="img/add_iscsi_role.png" alt="Adding the iSCSI role to the server." class="large" /><p class="caption">Adding the iSCSI role to the server.</p>
+</div>
+<p>After you've restarted, log into the iSCSI machine and choose &quot;Add roles and features.&quot; In the roles list, open up the dropdown for File and iSCSI Services and choose File Server and iSCSI Target Server from the list. Click Next and Install to complete this process.</p>
+<p>Upon installing the new roles, click on the &quot;File and Storage Services&quot; on the left side of the Server Manager window, and then choose iSCSI from the secondary list. In the first box, choose &quot;To create an iSCSI virtual disk, start the New iSCSI Virtual Disk Wizard.&quot;</p>
+<p>Once the wizard is open, it is fairly simple to create an iSCSI disk. In the location prompt, select the &quot;Type a custom path&quot; option and provide the following &quot;C:\iSCSI&quot;. In the next screen, give your disk a name, such as &quot;sqldata&quot;. Next, size your disk. I chose 5GB. Next, you'll be prompted to create a new iSCSI target. Give your target a name, such as &quot;sqldata.</p>
+<p>In the Access Servers tab, you'll have to add each node. Click on the add button, select the &quot;Enter a value for the selected type&quot; option at the bottom of the prompt, and change the type to IP. You can then supply the static IPs for your nodes, which were 192.168.0.11 and 192.168.0.12. Once you've added both nodes, you can click through the authentication screen and Create the iSCSI disk. The iSCSI page will refresh and show the newly created disk.</p>
+<p>Now that we've created an iSCSI disk, we can now return to our node servers, add the target we just created, and get ready to cluster up!</p>
+
+
+
+
+
+
+
+
+
+<h3 id="cluster-up">Cluster Up</h3>
+<p>We're in the final steps of creating our Windows cluster. As before, I'll let you know when you need to perform an action on both nodes.</p>
+<p>Returning to the node machines, log in, click on Tools in the upper right-hard corner, and choose &quot;iSCSI Initiator.&quot; Confirm that you'd like to turn it on. When the initiator opens, type the IP address of the iSCSI VM in the quick find box (I typed in 192.168.0.20). It should immediately find the iSCSI target. Close the iSCSI initiator.</p>
+<p>Click on Tools again, and this time choose &quot;Computer Management.&quot; This screen should look a little more familiar to people with some server experience. Choose &quot;Disk Management&quot; in the list to the left. After loading, you should see the iSCSI disk. Right-click the volume to turn it on and partition it. Do note: you'll only have to partition it on Node1, and when you refresh your Disk Management on Node2, it should show the volume as having been partitioned. <em>Do make sure that they use the same drive letter on both nodes however.</em> Close the Computer Manager.</p>
+
+
+
+
+
+<p>Once the shared storage has been connected and partitioned, we'll install the Failover Clustering Feature. Back on the main page, click on option 2, &quot;Add roles and features.&quot; Once the wizard starts however, click Next until you get to the Features tab. That's where Failover Clustering is (rather than being a Role). Install the additional add-ons as well. Click Next, and then Install. Restart the server and repeat the process on Node2.</p>
+<div class="figure">
+<img src="img/add_clustering.png" alt="Adding the Failover Cluster feature." class="large" /><p class="caption">Adding the Failover Cluster feature.</p>
+</div>
+<p>Once both nodes have restarted, we're going to test the clustering settings. Should they pass, we can immediately cluster the two nodes. With both nodes running, log in to Node1 <strong>but use your domain login</strong>. This is the admin account that we created on the domain controller. In my case, the login is &quot;SQLLAB\Administrator&quot;. You can use the little back arrow in the login screen to Switch Users. This is necessary to test and install the cluster, since when we create our cluster, the machine will need the administrative rights in order to record its access point in the DNS.</p>
+<p>Once logged in, click on the Tools button, and choose Failover Cluster Manager. Click on Validate Configuration. Follow the wizard by adding your nodes, and choose to run all tests. Assuming all returned well (and you may see some non-critical errors), you're ready to cluster those nodes.</p>
+<p>When you click Finish, you should immediately jump into the Create a Cluster wizard. Click Next, give your cluster a name and complete the IP address for it that uses the same network as the domain. I used 10.0.0.24. Uncheck the other IP address that is connected to the <em>storage</em> network (that's the one beginning with 192.168.0.__). Click next two more times to validate and create the cluster!</p>
+<br />
+<div class="figure">
+<img src="img/define_cluster.png" alt="Define your cluster access point." class="large" /><p class="caption">Define your cluster access point.</p>
+</div>
+<p>Congratulations on clustering Windows Server 2012! From here, you could go on to investigate clustering SQL Server, checking out AlwaysOn Availability Groups, or building a completely different network architecture. Enjoy!</p>
+
+
+<h2 id="change-log">Change Log</h2>
+<p><strong>July 8, 2013</strong>&mdash;Updated guide to use Windows Server iSCSI; removed references to StarWind software and SAN product; general editing.</p>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.9.1.min.js"><\/script>')</script>
+        <script src="js/plugins.js"></script>
+        <script src="js/main.js"></script>
+
+        <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+        <script>
+            var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
+            (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+            g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+            s.parentNode.insertBefore(g,s)}(document,'script'));
+        </script>
+    </body>
+</html>
